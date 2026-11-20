@@ -9,6 +9,8 @@
 #include <QTextCursor>
 #include <QTextLayout>
 
+#include <algorithm>
+
 #include "document.h"
 
 namespace {
@@ -182,7 +184,12 @@ void MarkdownView::paint(QPainter *painter) {
     const qreal top = m_contentY - m_margin, bottom = top + height();
     QTextCharFormat matchFormat;
     matchFormat.setBackground(m_matchColor);
-    for (const auto &[start, end] : std::as_const(m_matches)) {
+    // Matches are in document order, so a binary search on their y finds the
+    // first one near the viewport in O(log n) cheap yOf() calls.
+    const auto first = std::lower_bound(m_matches.cbegin(), m_matches.cend(), top - 200,
+        [this](const QPair<int, int> &match, qreal limit) { return yOf(match.first) - m_margin < limit; });
+    for (auto it = first; it != m_matches.cend(); ++it) {
+        const auto [start, end] = *it;
         const qreal y = yOf(start) - m_margin;
         if (y < top - 200)
             continue;
