@@ -1,4 +1,4 @@
-// mread - a minimal, keyboard-driven Markdown reader for Omarchy.
+// MreaD - a minimal, keyboard-driven Markdown reader for Omarchy.
 
 #include <QCommandLineParser>
 #include <QDir>
@@ -20,6 +20,7 @@
 int main(int argc, char *argv[]) {
     QGuiApplication app(argc, argv);
     app.setApplicationName("mread");
+    app.setApplicationDisplayName("MreaD");
     app.setApplicationVersion("0.1.0");
 
     // Matches the window to mread.desktop, so the compositor (Wayland app_id)

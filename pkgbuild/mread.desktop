@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
-Name=mread
+Name=MreaD
 GenericName=Markdown Reader
 Comment=Read Markdown files with vim keys
 Exec=mread %f
