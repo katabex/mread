@@ -3,6 +3,7 @@
 #include <QDesktopServices>
 #include <QFile>
 #include <QFileInfo>
+#include <QFontMetricsF>
 #include <QRegularExpression>
 #include <QTextBlock>
 #include <QTextCursor>
@@ -313,7 +314,16 @@ void Document::render(bool reload) {
             continue;
         }
 
-        blockFormat.setLineHeight(inTable ? 100 : 140, QTextBlockFormat::ProportionalHeight);
+        // Proportional spacing scales with the tallest thing on a line, so a
+        // picture would get 40% of its own height as a gap below it. Paragraphs
+        // with pictures get the fixed distance a line of text gets instead.
+        bool hasImage = false;
+        for (auto it = block.begin(); !it.atEnd() && !hasImage; ++it)
+            hasImage = it.fragment().charFormat().isImageFormat();
+        if (hasImage && !inTable)
+            blockFormat.setLineHeight(QFontMetricsF(body).height() * 0.4, QTextBlockFormat::LineDistanceHeight);
+        else
+            blockFormat.setLineHeight(inTable ? 100 : 140, QTextBlockFormat::ProportionalHeight);
         if (inTable) {
             blockFormat.setTopMargin(0);
             blockFormat.setBottomMargin(0);

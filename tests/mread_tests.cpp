@@ -1,3 +1,4 @@
+#include <QAbstractTextDocumentLayout>
 #include <QDir>
 #include <QImage>
 #include <QPainter>
@@ -219,6 +220,47 @@ private slots:
         QVERIFY(document.open(m_dir.filePath("r.md")));
         settings.setFontSize(20);
         QCOMPARE(document.textDocument()->begin().begin().fragment().charFormat().font().pixelSize(), 40);
+    }
+
+    // A paragraph holding a picture must not get the 40% extra line spacing
+    // meant for text, which on a tall picture is a large gap below it.
+    void documentAddsNoGapBelowPictures() {
+        Theme theme(m_dir.filePath("missing"));
+        Settings settings(m_dir.filePath("images.conf"));
+        Document document(&theme, &settings);
+        QImage picture(200, 300, QImage::Format_RGB32);
+        picture.fill(Qt::blue);
+        QVERIFY(picture.save(m_dir.filePath("picture.png")));
+        write(m_dir.filePath("images.md"), "# Pictures\n\n![tall](picture.png)\n\nAfter the picture.\n\n"
+                                           "Before ![tall](picture.png) after, in one sentence.\n\nEnd.\n");
+        QVERIFY(document.open(m_dir.filePath("images.md")));
+        QTextDocument *doc = document.textDocument();
+        doc->setTextWidth(760);
+        doc->size(); // Lays the document out, so blocks have lines.
+
+        const QTextBlock alone = doc->findBlockByNumber(1);
+        QCOMPARE(alone.layout()->lineCount(), 1);
+        QCOMPARE(alone.text(), QString(QChar::ObjectReplacementCharacter));
+        // Qt adds line spacing between blocks, not inside them, so measure the
+        // extra space from a block's bottom edge to the next block, less the
+        // paragraph margin.
+        auto extraBelow = [doc](const QTextBlock &block) {
+            const QRectF rect = doc->documentLayout()->blockBoundingRect(block);
+            const qreal next = doc->documentLayout()->blockBoundingRect(block.next()).top();
+            return next - rect.bottom() - block.blockFormat().bottomMargin();
+        };
+        QVERIFY2(extraBelow(alone) < 10,
+                 qPrintable(QString("%1 px extra below a %2 px picture").arg(extraBelow(alone)).arg(picture.height())));
+
+        // A picture inside a sentence: its line must not grow 40% past the picture either.
+        const QTextBlock inline_ = doc->findBlockByNumber(3);
+        QVERIFY(inline_.text().startsWith("Before"));
+        QVERIFY2(extraBelow(inline_) < 15, qPrintable(QString("%1 px extra below the sentence").arg(extraBelow(inline_))));
+
+        // Text paragraphs keep their 140% line spacing.
+        const QTextBlock text = doc->findBlockByNumber(2);
+        QCOMPARE(text.text(), QString("After the picture."));
+        QVERIFY(extraBelow(text) > text.layout()->lineAt(0).height() * 0.3);
     }
 
     // ---- file index --------------------------------------------------------
