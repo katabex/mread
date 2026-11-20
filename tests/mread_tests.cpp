@@ -1,4 +1,6 @@
 #include <QDir>
+#include <QImage>
+#include <QPainter>
 #include <QFile>
 #include <QSignalSpy>
 #include <QStandardPaths>
@@ -11,6 +13,7 @@
 #include "document.h"
 #include "fileindex.h"
 #include "fuzzymodel.h"
+#include "markdownview.h"
 #include "settings.h"
 #include "theme.h"
 
@@ -246,7 +249,74 @@ private slots:
         QTRY_VERIFY(!index.error().isEmpty());
     }
 
+    // ---- search highlights in tables ----------------------------------------
+
+    // Table cells are stored row by row, so a match at the end of a long
+    // wrapped cell sits lower on screen than a match at the start of the next
+    // cell. Highlighting must not assume match y grows in document order.
+    void highlightsVisibleMatchAfterLowerOneInSameRow() {
+        TableView t(this, 300);
+        // View from just above the short cell's match to above the long
+        // cell's match, which is below the bottom edge.
+        t.view.setSize(QSizeF(1000, t.longY - t.shortY - 40));
+        t.view.setContentY(t.shortY - 10);
+        QVERIFY2(t.highlightChangesPixels(), "visible match in the next cell is not highlighted");
+    }
+
+    void highlightsVisibleMatchInRowTallerThanSlack() {
+        TableView t(this, 2000);
+        // The row is far taller than the 200 px look-behind: the short cell's
+        // match is well above the view while the long cell's match is in it.
+        QVERIFY2(t.longY - t.shortY > 400, "test row is not tall enough");
+        t.view.setSize(QSizeF(1000, 200));
+        t.view.setContentY(t.longY - 50);
+        QVERIFY2(t.highlightChangesPixels(), "visible match at the end of a tall cell is not highlighted");
+    }
+
 private:
+    // A document with one table row: a long cell ending in MARK and a short
+    // cell starting with MARK, shown in a MarkdownView. y values are in
+    // content coordinates, as MarkdownView::yOf returns them.
+    struct TableView {
+        TableView(MreadTests *tests, int fillerWords)
+            : theme(tests->m_dir.filePath("missing")), settings(tests->m_dir.filePath("table.conf")),
+              document(&theme, &settings) {
+            QByteArray filler;
+            for (int i = 0; i < fillerWords; ++i)
+                filler += "word ";
+            const QString path = tests->m_dir.filePath(QString("table-%1.md").arg(fillerWords));
+            write(path, "# Table\n\n| Long | Short |\n|------|-------|\n| " + filler + "MARK | MARK here |\n");
+            view.setSize(QSizeF(1000, 800));
+            view.setTextWidth(760);
+            view.setDocument(&document);
+            document.open(path);
+            const auto first = document.find("MARK", 0, false);
+            const auto second = document.find("MARK", first[1].toInt(), false);
+            longY = view.yOf(first[0].toInt());
+            shortY = view.yOf(second[0].toInt());
+        }
+
+        bool highlightChangesPixels() {
+            auto render = [this] {
+                QImage image(view.size().toSize(), QImage::Format_ARGB32_Premultiplied);
+                image.fill(Qt::black);
+                QPainter painter(&image);
+                view.paint(&painter);
+                return image;
+            };
+            view.setHighlight({});
+            const QImage plain = render();
+            view.setHighlight("MARK");
+            return render() != plain;
+        }
+
+        Theme theme;
+        Settings settings;
+        Document document;
+        MarkdownView view;
+        qreal longY = 0, shortY = 0;
+    };
+
     static void write(const QString &path, const QByteArray &contents) {
         QFile file(path);
         QVERIFY(file.open(QIODevice::WriteOnly));

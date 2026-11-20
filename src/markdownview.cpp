@@ -8,6 +8,7 @@
 #include <QTextBlock>
 #include <QTextCursor>
 #include <QTextLayout>
+#include <QTextTable>
 
 #include <algorithm>
 
@@ -122,6 +123,22 @@ qreal MarkdownView::yOf(int position) const {
     return y + m_margin;
 }
 
+// The vertical range a match can occupy, as [top, bottom] in content
+// coordinates. Table cells are stored cell by cell, so within a row a match
+// in a long wrapped cell can sit below one in the next cell; treating the
+// whole table as the range keeps both ends sorted in document order.
+QPair<qreal, qreal> MarkdownView::matchRange(int position) const {
+    QTextDocument *doc = textDocument();
+    QTextCursor cursor(doc);
+    cursor.setPosition(position);
+    if (QTextTable *table = cursor.currentTable()) {
+        const QRectF rect = doc->documentLayout()->frameBoundingRect(table);
+        return {rect.top() + m_margin, rect.bottom() + m_margin};
+    }
+    const qreal y = yOf(position);
+    return {y, y};
+}
+
 int MarkdownView::positionAtY(qreal y) const {
     const QTextDocument *doc = textDocument();
     if (!doc)
@@ -184,17 +201,16 @@ void MarkdownView::paint(QPainter *painter) {
     const qreal top = m_contentY - m_margin, bottom = top + height();
     QTextCharFormat matchFormat;
     matchFormat.setBackground(m_matchColor);
-    // Matches are in document order, so a binary search on their y finds the
-    // first one near the viewport in O(log n) cheap yOf() calls.
+    // matchRange() grows in document order, so a binary search skips the
+    // matches above the viewport and the loop stops at the first one below.
     const auto first = std::lower_bound(m_matches.cbegin(), m_matches.cend(), top - 200,
-        [this](const QPair<int, int> &match, qreal limit) { return yOf(match.first) - m_margin < limit; });
+        [this](const QPair<int, int> &match, qreal limit) { return matchRange(match.first).second - m_margin < limit; });
     for (auto it = first; it != m_matches.cend(); ++it) {
         const auto [start, end] = *it;
-        const qreal y = yOf(start) - m_margin;
-        if (y < top - 200)
-            continue;
-        if (y > bottom)
+        if (matchRange(start).first - m_margin > bottom)
             break;
+        if (yOf(start) - m_margin < top - 200)
+            continue;
         QTextCursor cursor(doc);
         cursor.setPosition(start);
         cursor.setPosition(end, QTextCursor::KeepAnchor);

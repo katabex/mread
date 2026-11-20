@@ -74,6 +74,7 @@ protected:
 
 private:
     QTextDocument *textDocument() const;
+    QPair<qreal, qreal> matchRange(int position) const;
     QPointF toDocument(QPointF point) const;
     int hitTest(QPointF point) const;
     qreal maxContentY() const;

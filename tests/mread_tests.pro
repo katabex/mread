@@ -5,6 +5,6 @@ TEMPLATE = app
 
 INCLUDEPATH += ../src
 
-HEADERS += ../src/document.h ../src/fileindex.h ../src/fuzzymodel.h ../src/settings.h ../src/theme.h
-SOURCES += mread_tests.cpp ../src/document.cpp ../src/fileindex.cpp ../src/fuzzymodel.cpp \
+HEADERS += ../src/document.h ../src/fileindex.h ../src/fuzzymodel.h ../src/markdownview.h ../src/settings.h ../src/theme.h
+SOURCES += mread_tests.cpp ../src/document.cpp ../src/fileindex.cpp ../src/fuzzymodel.cpp ../src/markdownview.cpp \
            ../src/settings.cpp ../src/theme.cpp
