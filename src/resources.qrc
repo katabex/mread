@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file alias="Main.qml">Main.qml</file>
+        <file alias="FuzzyPicker.qml">FuzzyPicker.qml</file>
+        <file alias="KeyHelp.qml">KeyHelp.qml</file>
+    </qresource>
+</RCC>

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=mread
+GenericName=Markdown Reader
+Comment=Read Markdown files with vim keys
+Exec=mread %f
+Icon=mread
+Terminal=false
+Categories=Office;Viewer;
+MimeType=text/markdown;text/x-markdown;
+StartupWMClass=mread

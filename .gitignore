@@ -1,0 +1,8 @@
+/build/
+/pkgbuild/pkg/
+/pkgbuild/src/
+*.pkg.tar.*
+/report/
+/lavish/
+/input/
+/.pi/
