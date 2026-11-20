@@ -23,5 +23,5 @@ SOFTWARE.
 ---
 
 The theme watching in src/theme.cpp follows Omacut
-(https://github.com/omacom-io/omacut), MIT License,
+(https://github.com/omacom/omacut), MIT License,
 Copyright (c) David Heinemeier Hansson.
