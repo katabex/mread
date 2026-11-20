@@ -10,7 +10,7 @@ ApplicationWindow {
     minimumWidth: 420
     minimumHeight: 320
     visible: true
-    title: document.isOpen ? document.title + " - MreaD" : "MreaD"
+    title: document.isOpen ? document.title + " - Mread" : "Mread"
     color: theme.background
 
     Material.theme: theme.dark ? Material.Dark : Material.Light
@@ -261,7 +261,7 @@ ApplicationWindow {
             visible: !document.isOpen
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: "MreaD"
+                text: "Mread"
                 color: theme.accent
                 font.family: settings.codeFont
                 font.pixelSize: 32

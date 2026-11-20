@@ -35,7 +35,7 @@ Rectangle {
     Text {
         id: heading
         anchors { top: parent.top; left: parent.left; topMargin: 20; leftMargin: 32 }
-        text: "MreaD"
+        text: "Mread"
         color: theme.accent
         font.family: settings.codeFont
         font.pixelSize: 18
