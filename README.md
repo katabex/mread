@@ -4,7 +4,7 @@ A minimal Markdown reader for [Omarchy](https://omarchy.org): vim keys, a fuzzy 
 
 ![Mread showing a Markdown document with a search highlight](docs/screenshot.png)
 
-Mread does one job: it opens a Markdown file and sets it in a comfortable column. It reads files and never edits them.
+Mread does one job: it opens a Markdown file and sets it in a comfortable column. It never changes your files; `e` hands the file to your editor.
 
 ## Features
 
@@ -40,6 +40,8 @@ mread notes.md
 
 Without a file, Mread reopens the file you were reading, at the same place. Close a file with `x` to start empty next time; then press `o` to find one. You can also drop a file onto the window.
 
+Mread only reads. Press `e` to open the file in your Omarchy default editor (set with `omarchy default editor`, Neovim unless you changed it); keep Mread beside it as a live preview, since it reloads on every save and keeps your place.
+
 To make Mread the default app for Markdown files:
 
 ```sh
@@ -62,6 +64,7 @@ Press `?` in the app to see this list.
 | `5j`, `3]]` ... | A count before a motion repeats it |
 | `o`, `Ctrl+o` | Open a file with the fuzzy finder |
 | `x` | Close the file |
+| `e` | Edit the file in Omarchy's default editor |
 | `f` / `F` | Choose the text font / code font |
 | `+` / `-` / `0` | Font size up / down / reset |
 | `>` / `<` | Column wider / narrower |

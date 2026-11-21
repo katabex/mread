@@ -31,6 +31,11 @@ public:
 
     Q_INVOKABLE bool open(const QString &path);
     Q_INVOKABLE void close();
+    // Opens the file in Omarchy's default editor (omarchy-launch-editor).
+    // Mread keeps showing it and reloads when the editor saves.
+    Q_INVOKABLE bool edit();
+    // Tests swap in a fake launcher.
+    void setEditorCommand(const QString &command) { m_editorCommand = command; }
 
     // Next match of text from position, as [start, end], or [-1, -1].
     // Lowercase text ignores case, like vim's smartcase.
@@ -64,6 +69,7 @@ private:
     Settings *m_settings;
     QTextDocument m_document;
     QString m_path;
+    QString m_editorCommand = "omarchy-launch-editor";
     QString m_markdown;
     QString m_error;
     QVariantList m_headings;

@@ -4,7 +4,9 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QFontMetricsF>
+#include <QProcess>
 #include <QRegularExpression>
+#include <QStandardPaths>
 #include <QTextBlock>
 #include <QTextCursor>
 #include <QTextFrame>
@@ -124,6 +126,33 @@ void Document::close() {
     setError({});
     emit pathChanged();
     render(false);
+}
+
+bool Document::edit() {
+    if (m_path.isEmpty()) {
+        setError(tr("No file to edit"));
+        return false;
+    }
+    const QString program = QStandardPaths::findExecutable(m_editorCommand);
+    if (program.isEmpty()) {
+        setError(tr("Cannot edit: %1 not found (it comes with Omarchy)").arg(m_editorCommand));
+        return false;
+    }
+    // Detached and without Mread's input and output, so the editor keeps
+    // running after Mread quits, even when Mread's output was a pipe or a
+    // terminal that has since closed.
+    QProcess process;
+    process.setProgram(program);
+    process.setArguments({m_path});
+    process.setStandardInputFile(QProcess::nullDevice());
+    process.setStandardOutputFile(QProcess::nullDevice());
+    process.setStandardErrorFile(QProcess::nullDevice());
+    if (!process.startDetached()) {
+        setError(tr("Cannot start %1").arg(program));
+        return false;
+    }
+    setError({});
+    return true;
 }
 
 void Document::watch() {

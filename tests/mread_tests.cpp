@@ -284,6 +284,41 @@ private slots:
         QVERIFY(extraBelow(text) > text.layout()->lineAt(0).height() * 0.3);
     }
 
+    // e hands the open file to Omarchy's default editor, detached, so the
+    // editor outlives Mread. A fake launcher records what it was given.
+    void documentOpensFileInEditor() {
+        Theme theme(m_dir.filePath("missing"));
+        Settings settings(m_dir.filePath("edit.conf"));
+        Document document(&theme, &settings);
+        const QString launcher = m_dir.filePath("fake-launch-editor"), log = m_dir.filePath("editor.log");
+        write(launcher, "#!/bin/sh\nprintf '%s\\n' \"$@\" > '" + log.toUtf8() + "'\n");
+        QVERIFY(QFile::setPermissions(launcher, QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner));
+        document.setEditorCommand(launcher);
+
+        QVERIFY(!document.edit()); // Nothing open yet.
+        QVERIFY(!document.error().isEmpty());
+
+        write(m_dir.filePath("notes.md"), "# Notes\n");
+        QVERIFY(document.open(m_dir.filePath("notes.md")));
+        QVERIFY(document.edit());
+        QVERIFY(document.error().isEmpty());
+        QFile file(log);
+        QTRY_VERIFY(file.exists() && file.size() > 0);
+        QVERIFY(file.open(QIODevice::ReadOnly));
+        QCOMPARE(QString::fromUtf8(file.readAll()).trimmed(), document.path());
+    }
+
+    void documentSaysWhenTheEditorLauncherIsMissing() {
+        Theme theme(m_dir.filePath("missing"));
+        Settings settings(m_dir.filePath("noeditor.conf"));
+        Document document(&theme, &settings);
+        write(m_dir.filePath("n.md"), "text\n");
+        QVERIFY(document.open(m_dir.filePath("n.md")));
+        document.setEditorCommand("no-such-launch-editor");
+        QVERIFY(!document.edit());
+        QVERIFY2(document.error().contains("no-such-launch-editor"), qPrintable(document.error()));
+    }
+
     // ---- file index --------------------------------------------------------
 
     void fileIndexListsMarkdownWithRecentFirst() {

@@ -23,6 +23,7 @@ Rectangle {
         ["5j, 3]] ...", "Counts repeat a motion"],
         ["o", "Open file (fuzzy finder)"],
         ["x", "Close file"],
+        ["e", "Edit in Omarchy's default editor"],
         ["f / F", "Text font / code font"],
         ["+ / - / 0", "Font size up / down / reset"],
         ["> / <", "Column wider / narrower"],

@@ -205,6 +205,10 @@ ApplicationWindow {
         case "N": search(false); return true
         case "o": openFinder(); return true
         case "x": document.close(); return true
+        case "e":
+            if (document.edit())
+                message = "Opened in your editor; saving there updates this view"
+            return true
         case "f": fontPicker.target = "body"; fontPicker.open(); return true
         case "F": fontPicker.target = "code"; fontPicker.open(); return true
         case "+": case "=": settings.fontSize += count; return true
