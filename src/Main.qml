@@ -36,10 +36,43 @@ ApplicationWindow {
         font.pixelSize: settings.fontSize
     }
 
+    // Reopen the file read last, at the same place, unless a file was named
+    // on the command line. Naming that same file also restores the place.
     Component.onCompleted: {
-        if (initialFile !== "")
-            document.open(initialFile)
+        const lastFile = settings.lastFile
+        const lastPosition = settings.lastPosition, lastOffset = settings.lastOffset
+        const file = initialFile !== "" ? initialFile : lastFile
+        if (file !== "" && document.open(file)) {
+            if (document.path === lastFile)
+                scrollTo(yOf(lastPosition) + lastOffset)
+        } else if (file === lastFile) {
+            settings.saveSession("", 0, 0) // Gone or unreadable; the error shows.
+        }
         reader.forceActiveFocus()
+    }
+
+    // The session is saved shortly after scrolling stops and when leaving.
+    function saveSession() {
+        sessionTimer.stop()
+        if (!document.isOpen) {
+            settings.saveSession("", 0, 0)
+            return
+        }
+        const position = topPosition()
+        settings.saveSession(document.path, position, view.contentY - yOf(position))
+    }
+
+    function quit() {
+        saveSession()
+        Qt.quit()
+    }
+
+    onClosing: saveSession()
+
+    Timer {
+        id: sessionTimer
+        interval: 500
+        onTriggered: win.saveSession()
     }
 
     // ---- motions ---------------------------------------------------------
@@ -132,7 +165,7 @@ ApplicationWindow {
             else if (key === Qt.Key_Y) scrollBy(-lineStep * count)
             else if (key === Qt.Key_C) view.copy()
             else if (key === Qt.Key_O) openFinder()
-            else if (key === Qt.Key_Q) Qt.quit()
+            else if (key === Qt.Key_Q) quit()
             else return false
             return true
         }
@@ -183,7 +216,7 @@ ApplicationWindow {
             if (view.hasSelection) { view.copy(); message = "Copied" }
             return true
         case "?": help.visible = !help.visible; return true
-        case "q": Qt.quit(); return true
+        case "q": quit(); return true
         }
 
         switch (key) {
@@ -216,7 +249,10 @@ ApplicationWindow {
                 win.scrollTo(0)
         }
         function onErrorChanged() { if (document.error !== "") win.message = document.error }
-        function onPathChanged() { win.message = "" }
+        function onPathChanged() {
+            win.message = ""
+            sessionTimer.restart()
+        }
     }
 
     Item {
@@ -234,6 +270,7 @@ ApplicationWindow {
             wheelStep: win.lineStep * 3
             textColor: theme.foreground
             selectionColor: theme.selection
+            onContentYChanged: sessionTimer.restart()
             matchColor: theme.lighterBackground
             currentMatchColor: theme.accent
             currentMatchTextColor: theme.background

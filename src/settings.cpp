@@ -35,6 +35,9 @@ int Settings::columns() const {
     return qBound(MinColumns, m_settings.value("columns", DefaultColumns).toInt(), MaxColumns);
 }
 QStringList Settings::recentFiles() const { return m_settings.value("recentFiles").toStringList(); }
+QString Settings::lastFile() const { return m_settings.value("lastFile").toString(); }
+int Settings::lastPosition() const { return qMax(0, m_settings.value("lastPosition").toInt()); }
+qreal Settings::lastOffset() const { return m_settings.value("lastOffset").toReal(); }
 
 void Settings::setBodyFont(const QString &family) {
     if (family.isEmpty() || family == bodyFont())
@@ -74,4 +77,16 @@ void Settings::addRecent(const QString &path) {
         recent.removeLast();
     m_settings.setValue("recentFiles", recent);
     emit recentChanged();
+}
+
+void Settings::saveSession(const QString &path, int position, qreal offset) {
+    if (path.isEmpty()) {
+        m_settings.remove("lastFile");
+        m_settings.remove("lastPosition");
+        m_settings.remove("lastOffset");
+        return;
+    }
+    m_settings.setValue("lastFile", path);
+    m_settings.setValue("lastPosition", qMax(0, position));
+    m_settings.setValue("lastOffset", qIsFinite(offset) ? offset : 0.0);
 }

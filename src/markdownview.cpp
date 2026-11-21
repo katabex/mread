@@ -110,6 +110,8 @@ qreal MarkdownView::yOf(int position) const {
     const QTextDocument *doc = textDocument();
     if (!doc)
         return 0;
+    // A saved position can lie past the end of a file that has since shrunk.
+    position = qBound(0, position, doc->characterCount() - 1);
     const QTextBlock block = doc->findBlock(position);
     if (!block.isValid())
         return 0;

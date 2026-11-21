@@ -89,6 +89,27 @@ private slots:
         QCOMPARE(settings.recentFiles(), QStringList({"/a.md", "/b.md"}));
     }
 
+    void sessionIsRememberedAndCleared() {
+        const QString file = m_dir.filePath("session.conf");
+        {
+            Settings settings(file);
+            QCOMPARE(settings.lastFile(), QString());
+            QCOMPARE(settings.lastPosition(), 0);
+            settings.saveSession("/notes/a.md", 1234, 7.25);
+        }
+        {
+            Settings settings(file);
+            QCOMPARE(settings.lastFile(), QString("/notes/a.md"));
+            QCOMPARE(settings.lastPosition(), 1234);
+            QCOMPARE(settings.lastOffset(), 7.25);
+            settings.saveSession("/notes/a.md", -5, 2); // Clamped, never negative.
+            QCOMPARE(settings.lastPosition(), 0);
+            settings.saveSession({}, 0); // Closing the file forgets it.
+        }
+        Settings settings(file);
+        QCOMPARE(settings.lastFile(), QString());
+    }
+
     // ---- theme -------------------------------------------------------------
 
     void themeFallsBackWithoutOmarchy() {

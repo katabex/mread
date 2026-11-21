@@ -16,6 +16,7 @@ Mread does one job: it opens a Markdown file and sets it in a comfortable column
 - GitHub-flavored Markdown: tables, task lists, fenced and indented code, block quotes, images.
 - Links to other Markdown files and `#heading` anchors open inside Mread; other links open in your browser.
 - Automatic reload when the file changes on disk, keeping your place.
+- The last file and your place in it are restored when Mread starts.
 
 ## Install
 
@@ -37,7 +38,7 @@ It needs `qt6-base`, `qt6-declarative`, `qt6-wayland` and `fd` at run time, plus
 mread notes.md
 ```
 
-Without a file, Mread starts empty; press `o` to find one. You can also drop a file onto the window.
+Without a file, Mread reopens the file you were reading, at the same place. Close a file with `x` to start empty next time; then press `o` to find one. You can also drop a file onto the window.
 
 To make Mread the default app for Markdown files:
 
@@ -73,7 +74,7 @@ Search ignores case unless you type a capital letter, as in vim's `smartcase`, a
 
 ## Settings
 
-Fonts, font size, column width and recent files are saved to `~/.config/mread/mread.conf` as you change them.
+Fonts, font size, column width and recent files are saved to `~/.config/mread/mread.conf` as you change them, along with the open file and your place in it. The place is the text at the top of the window, so it stays right after you change the font size or column width.
 
 Colors come from the current Omarchy theme (`~/.local/state/omarchy/current/theme/colors.toml`). Without Omarchy, Mread uses a built-in dark palette.
 
